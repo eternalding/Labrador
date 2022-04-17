@@ -8,7 +8,7 @@ LOGGING_LEVEL = {
 def init_logger(level:str="INFO"):
     # Configurate logger
     logging_level = LOGGING_LEVEL[level]
-    format = "['%(asctime)s %(filename)s:%(lineno)s - %(funcName)10s() ] %(message)s"
+    format = "[%(levelname)s] %(asctime)s, at %(filename)s:%(lineno)s - %(funcName)10s()\n%(message)s"
     logging.basicConfig(format=format, level=logging_level, datefmt='%Y/%m/%d %I:%M:%S %p')
 
     # Get logger

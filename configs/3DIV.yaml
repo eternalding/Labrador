@@ -1,0 +1,17 @@
+Format:
+  Delimited:
+    chrom1_field: "chr"
+    chrom2_field: "chr"
+    bin1_field: "bin1"
+    bin2_field: "bin2"
+    main_value_field: "rescaled_intensity"
+    optional_field: ["RawCount"]
+    delimiter: "\t"
+    resolution: 5000
+  Cooler:
+Metadata:
+  data: "/mnt/s/workspace/hic_datasets/H1_ESCs.chr15.distnorm.scale2.csv"
+  version:
+  resolution: 5000
+  assembly: hg38
+  optional:
