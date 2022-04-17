@@ -1,11 +1,12 @@
 from scipy.sparse import coo_array
 import numpy as np
-
+import logging
 
 class SparseMat:
     def __init__(self, row_idxs: np.ndarray, col_idxs: np.ndarray, vals: dict,
                  chrom: str, resolution: int):
 
+        self.logger = logging.getLogger(__name__)
         self.chrom = chrom
         self.row_idxs = row_idxs
         self.col_idxs = col_idxs
@@ -13,6 +14,7 @@ class SparseMat:
                             for k, v in vals.items()}
         self.resolution = resolution
         self.stats = {}
+
 
     def get_stats(self):
         for k, v in self.matrices.items():
@@ -37,4 +39,17 @@ class SparseMat:
                 msg += f"{stat}: {val:.3f}\n"
         return msg
 
+    def get_avail_values(self):
+        return list(self.matrices.keys())
 
+    def query(self, start: int, end: int, value: str = "main_value_field", to_symmetric: bool = False):
+        if value not in self.matrices:
+            self.logger.error(f"Assigned value field {value} doesn't exist. You must manually provide it, or calculate "
+                              f"via provided normalization methods. Current value fields: {self.get_avail_values()}")
+            raise NotImplementedError
+        start_idx = start // self.resolution
+        end_idx = end // self.resolution
+        arr = self.matrices[value].toarray()[start_idx:end_idx, start_idx:end_idx]
+        if to_symmetric:
+            arr = arr + arr.T
+        return arr

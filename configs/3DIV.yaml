@@ -10,7 +10,7 @@ Format:
     resolution: 5000
   Cooler:
 Metadata:
-  data: "/mnt/s/workspace/hic_datasets/H1_ESCs.chr15.distnorm.scale2.csv"
+  data: "/mnt/s/workspace/hic_datasets/H1_ESCs_control.chr22.distnorm.scale2.gz"
   version:
   resolution: 5000
   assembly: hg38

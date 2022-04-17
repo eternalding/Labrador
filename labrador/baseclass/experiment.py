@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 from labrador.baseclass.specs import DelimiterSpec, CoolerSpec
 from labrador.formatter.delimited import read_delimited_file
+from labrador.visualizer.plot import plot_interactive_matrix
 import logging
 import gc
 
@@ -39,8 +40,6 @@ class Experiment:
             # Create spec
             self.create_spec(spec_type="delimiter")
             self.sparse_mats = read_delimited_file(ext, filename, self.spec)
-            for k, v in self.sparse_mats.items():
-                print(k," ",v)
         elif ext == ".mcool" or ext == ".cool":
             # TODO: Support cooler files
             pass
@@ -48,6 +47,27 @@ class Experiment:
             raise NotImplementedError(f"Labrador doesn't support file format {ext}! "
                                        "Supported formats: {SUPPORTED_FORMATS}")
 
+    def get_avail_chroms(self):
+        return list(self.sparse_mats.keys())
 
+    def query(self, chrom: str, start: int, end: int, value: str = "main_value_field", to_symmetric: bool = False):
+        if chrom not in self.sparse_mats:
+            self.logger.error(
+                f"Assigned chromosome {chrom} doesn't exist. "
+                f"Current available chromosome: {self.get_avail_chroms()}")
+            raise NotImplementedError
+        return self.sparse_mats[chrom].query(start, end, value, to_symmetric)
+
+    def interactive_plot(self, chrom: str, start: int, end: int, value: str,
+                         to_symmetric: bool = False, *args, **kwargs):
+        resolution = self.spec.metadata['resolution']
+
+        arr = self.query(chrom, start, end, value, to_symmetric=to_symmetric)
+        x_labels = list(range(start, end, resolution))
+        y_labels = list(range(start, end, resolution))
+        kwargs['title'] = kwargs['title'] if "title" in kwargs else f"{chrom}: {start}-{end} resolution = {resolution} bp"
+
+        vb = plot_interactive_matrix(arr, x_labels, y_labels, resolution, *args, **kwargs)
+        return vb
 
 
