@@ -1,6 +1,9 @@
 from scipy.sparse import coo_array
 import numpy as np
 import logging
+from labrador.normalizer.ice import ICE_normalization
+
+SUPPORTED_NORM_METHODS = ["ICE"]
 
 class SparseMat:
     def __init__(self, row_idxs: np.ndarray, col_idxs: np.ndarray, vals: dict,
@@ -53,3 +56,17 @@ class SparseMat:
         if to_symmetric:
             arr = arr + arr.T
         return arr
+
+    def normalize(self, method: str, norm_by_value: str = "RawCount", *args, **kargs):
+        if method not in SUPPORTED_NORM_METHODS:
+            self.logger.error(f"Assigned normalization method {method} is not supported!"
+                                "Currently supported methods: {SUPPORTED_NORM_METHODS}")
+            raise NotImplementedError
+
+        self.logger.info(f"Normalize {norm_by_value} with {method} normalization.")
+        if method == "ICE":
+            max_iter = kargs['max_iter'] if 'max_iter' in kargs else 100
+            self.matrices[method] = ICE_normalization(self.matrices[norm_by_value], max_iter=max_iter)
+        self.logger.info(f"Normalization is done. Value is stored in matrices[{method}]")
+
+
