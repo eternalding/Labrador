@@ -24,7 +24,7 @@ def set_ipython_color_slider(fig, c_min: float, c_max: float):
     f = go.FigureWidget(fig)
     slider = widgets.FloatRangeSlider(max=c_max,
                                       min=c_min,
-                                      step=0.1,
+                                      step=(c_max-c_min)/1000,
                                       readout=False,
                                       readout_format='.2f',
                                       description='ColorBar')

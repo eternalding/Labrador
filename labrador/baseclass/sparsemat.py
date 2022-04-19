@@ -1,9 +1,10 @@
 from scipy.sparse import coo_array
 import numpy as np
 import logging
-from labrador.normalizer.ice import ICE_normalization
+from labrador.normalizer.hic_normalization import ICE_normalization, SCN_normalization
+from labrador.normalizer.statistics import minmax_normalization
 
-SUPPORTED_NORM_METHODS = ["ICE"]
+SUPPORTED_NORM_METHODS = ["ICE", "MinMax", "SCN"]
 
 class SparseMat:
     def __init__(self, row_idxs: np.ndarray, col_idxs: np.ndarray, vals: dict,
@@ -67,6 +68,12 @@ class SparseMat:
         if method == "ICE":
             max_iter = kargs['max_iter'] if 'max_iter' in kargs else 100
             self.matrices[method] = ICE_normalization(self.matrices[norm_by_value], max_iter=max_iter)
+        elif method == "SCN":
+            max_iter = kargs['max_iter'] if 'max_iter' in kargs else 100
+            self.matrices[method] = SCN_normalization(self.matrices[norm_by_value], max_iter=max_iter)
+        elif method == "MinMax":
+            self.matrices[method] = minmax_normalization(self.matrices[norm_by_value])
+
         self.logger.info(f"Normalization is done. Value is stored in matrices[{method}]")
 
 
