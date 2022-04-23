@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-def ICE_normalization(arr: sparse._arrays.coo_array, max_iter: int = 300, threshold: float = 1e-3):
+def ICE_normalization(arr: sparse._arrays.coo_array, max_iter: int = 2000, threshold: float = 1e-5):
     """
     ICE normalization.
     Detailed information could be found in https://www.nature.com/articles/nmeth.2148.
@@ -36,8 +36,10 @@ def ICE_normalization(arr: sparse._arrays.coo_array, max_iter: int = 300, thresh
         delta_bias[delta_bias == 0.0] = 1.0
 
         # Calculate weights
-        weights = [delta_bias[i] * delta_bias[j]
-                   for i, j in zip(arr_iter.row, arr_iter.col)]
+        row_bias = delta_bias[arr_iter.row]
+        col_bias = delta_bias[arr_iter.col]
+        weights = row_bias * col_bias
+
         # Update arr_iter
         arr_iter.data /= weights
 
@@ -47,7 +49,7 @@ def ICE_normalization(arr: sparse._arrays.coo_array, max_iter: int = 300, thresh
             logger.info("Reached convergence criteria.")
             break
         bias = new_bias
-        if iteration % 10 == 0:
+        if iteration % 50 == 0:
             logger.info(f"Iteration {iteration}: Bias difference = {diff}")
 
     # Normalize by learnt biases

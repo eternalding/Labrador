@@ -58,22 +58,25 @@ class SparseMat:
             arr = arr + arr.T
         return arr
 
-    def normalize(self, method: str, norm_by_value: str = "RawCount", *args, **kargs):
+    def normalize(self, method: str, norm_by_field: str = "RawCount", *args, **kargs):
         if method not in SUPPORTED_NORM_METHODS:
             self.logger.error(f"Assigned normalization method {method} is not supported!"
                                 "Currently supported methods: {SUPPORTED_NORM_METHODS}")
             raise NotImplementedError
 
-        self.logger.info(f"Normalize {norm_by_value} with {method} normalization.")
+        self.logger.info(f"Normalize {norm_by_field} with {method} normalization.")
         if method == "ICE":
             max_iter = kargs['max_iter'] if 'max_iter' in kargs else 100
-            self.matrices[method] = ICE_normalization(self.matrices[norm_by_value], max_iter=max_iter)
+            self.matrices[method] = ICE_normalization(self.matrices[norm_by_field], max_iter=max_iter)
         elif method == "SCN":
             max_iter = kargs['max_iter'] if 'max_iter' in kargs else 100
-            self.matrices[method] = SCN_normalization(self.matrices[norm_by_value], max_iter=max_iter)
+            self.matrices[method] = SCN_normalization(self.matrices[norm_by_field], max_iter=max_iter)
         elif method == "MinMax":
-            self.matrices[method] = minmax_normalization(self.matrices[norm_by_value])
+            self.matrices[method] = minmax_normalization(self.matrices[norm_by_field])
 
         self.logger.info(f"Normalization is done. Value is stored in matrices[{method}]")
+
+    def get_available_fields(self):
+        return list(self.matrices.keys())
 
 
