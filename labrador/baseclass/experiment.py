@@ -68,7 +68,7 @@ class Experiment:
         y_labels = np.arange(start, end, resolution)
         kwargs['title'] = kwargs['title'] if "title" in kwargs else f"{chrom}: {start}-{end} resolution = {resolution} bp"
 
-        vb = plot_interactive_matrix(arr, x_labels, y_labels, resolution, *args, **kwargs)
+        vb = plot_interactive_matrix(arr, x_labels, y_labels, *args, **kwargs)
         return vb
 
     def normalize(self, chrom: str, method: str, field: str, *args, **kwargs):

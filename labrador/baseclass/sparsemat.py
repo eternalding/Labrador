@@ -51,9 +51,25 @@ class SparseMat:
             self.logger.error(f"Assigned value field {value} doesn't exist. You must manually provide it, or calculate "
                               f"via provided normalization methods. Current value fields: {self.get_avail_values()}")
             raise NotImplementedError
-        start_idx = start // self.resolution
-        end_idx = end // self.resolution
-        arr = self.matrices[value].toarray()[start_idx:end_idx, start_idx:end_idx]
+        # Convert coordinate into bin index
+        start = start // self.resolution
+        end = end // self.resolution
+
+        # Query range
+        row_idx = np.logical_and(start <= self.matrices[value].row, self.matrices[value].row < end)
+        col_idx = np.logical_and(start <= self.matrices[value].col, self.matrices[value].col < end)
+        valid_idx = row_idx * col_idx
+        target_data = self.matrices[value].data[valid_idx]
+        if target_data.size == 0:
+            self.logger.warning(f"No value detected in range: {start * self.resolution}-{end * self.resolution}")
+
+        # Fill-in arrays to be returned
+        arr = np.zeros((end-start, end-start))
+        row_bins = self.matrices[value].row[valid_idx] - start
+        col_bins = self.matrices[value].col[valid_idx] - start
+        arr[row_bins, col_bins] = target_data
+
+        # arr = self.matrices[value].toarray()[start_idx:end_idx, start_idx:end_idx]
         if to_symmetric:
             arr = arr + arr.T
         return arr

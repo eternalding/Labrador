@@ -10,7 +10,7 @@ from IPython.display import display
 MAX_DISPLAY_PER_ROW = 3
 
 
-def plot_interactive_matrix(arr: np.ndarray, x_labels: list, y_labels: list, resolution: int, *args, **kwargs):
+def plot_interactive_matrix(arr: np.ndarray, x_labels: list, y_labels: list, *args, **kwargs):
     fig = px.imshow(arr, x=x_labels, y=y_labels,
                     color_continuous_scale='YlOrRd', aspect="equal", *args, **kwargs)
 
@@ -42,7 +42,6 @@ def update_color_range(figure, range_color, coloraxis: str = "coloraxis"):
 
 def set_ipython_color_slider(fig, c_min: float, c_max: float):
     f = go.FigureWidget(fig)
-
     slider = get_slider(c_min, c_max)
     vb = VBox([f, interactive(update_color_range,
                               figure=fixed(f),
@@ -85,7 +84,6 @@ def plot_multiple_arrays(arrs: dict, title: str = None):
     for idx, field in enumerate(fields, 1):
         row = ((idx-1) // MAX_DISPLAY_PER_ROW) + 1
         col = ((idx-1) % MAX_DISPLAY_PER_ROW) + 1
-        print(row, " ", col)
         fig.add_trace(arrs[field], row, col)
         fig.layout[f'coloraxis{idx}'] = fig.layout['coloraxis']
         fig.layout[f'coloraxis{idx}'].cmin = arrs[field]['z'].min()
@@ -118,4 +116,5 @@ def plot_multiple_arrays(arrs: dict, title: str = None):
 
     slider_vb = VBox(sliders)
     total_vb = VBox([slider_vb, f])
+    total_vb.layout.align_items = 'center'
     return total_vb

@@ -81,7 +81,7 @@ def KR_normalization(arr: sparse._arrays.coo_array):
     pass
 
 
-def SCN_normalization(arr: sparse._arrays.coo_array, max_iter: int = 10, threshold: float = 1e-3):
+def SCN_normalization(arr: sparse._arrays.coo_array, max_iter: int = 5000, threshold: float = 1e-3):
     """
     Sequential Component Normalization.
     Detailed information could be found in https://bmcgenomics.biomedcentral.com/track/pdf/10.1186/1471-2164-13-436.pdf
@@ -92,29 +92,31 @@ def SCN_normalization(arr: sparse._arrays.coo_array, max_iter: int = 10, thresho
     """
     logger = logging.getLogger(__name__)
     arr_iter = arr.copy()
+    arr_iter.eliminate_zeros()
+
+    def l2_norm(arr: sparse._arrays.coo_array, axis: int):
+        """scipy norm currently does not support np.ndarray type."""
+        return np.sqrt(arr.power(2).sum(axis=axis))
 
     for iteration in range(max_iter):
         """
         TODO: Fix euc norm problem on scipy
         """
         # Normalize by col
-        col_norm = linalg.norm(arr_iter, ord=2, axis=0)
-        arr_iter.data = np.array([data/col_norm[j]
-                                  for data, j in zip(arr_iter.data, arr_iter.col)])
+        col_norm = l2_norm(arr_iter, axis=0)
+        col_biases = col_norm[arr_iter.col]
+        arr_iter.data /= col_biases
 
-        # Normalize by col
-        row_norm = linalg.norm(arr_iter, ord=2, axis=1)
-        arr_iter.data = np.array([data/row_norm[i]
-                                  for data, i in zip(arr_iter.data, arr_iter.row)])
+        # Normalize by row
+        row_norm = l2_norm(arr_iter, axis=1)
+        row_biases = row_norm[arr_iter.row]
+        arr_iter.data /= row_biases
 
+        row_sum = arr_iter.sum(axis=1)
+        col_sum = arr_iter.sum(axis=0)
 
-        nextiter_col_sum = arr_iter.sum(axis=0)
-
-        if abs(nextiter_col_sum - row_norm).sum() < threshold:
-            logger.info("Reached convergence criteria.")
-
-        if iteration % 10 == 0:
-            logger.info(f"Iteration {iteration}: Average sum of cols: {col_sum.mean()}")
+        if iteration % 50 == 0:
+            logger.info(f"Iteration {iteration}: Average sum of rows: {row_sum.mean()}")
     return arr_iter
 
 def HiCNorm_normalization(arr: sparse._arrays.coo_array):
