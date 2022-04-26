@@ -1,8 +1,11 @@
-import scipy.sparse
+import scipy.sparse as sparse
 import numpy as np
 import multiprocessing
 from functools import partial
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+from scipy.stats import wilcoxon, mannwhitneyu
+import logging
 
 
 def get_binsignal(i: int, arr, w: int):
@@ -13,7 +16,30 @@ def get_binsignal(i: int, arr, w: int):
     return signal
 
 
-def TopDom(arr: sparse._arrays.coo_array, window_size: int, multiprocess: bool = True, resolution: int = 5000):
+def get_within_area(i: int, arr, w: int):
+    row_idx = np.logical_and(i-w <= arr.row, arr.row <= i-1)
+    col_idx = np.logical_and( i+1<= arr.col, arr.col <= i+w)
+    valid_idx = np.logical_and(row_idx, col_idx)
+    signal = arr.data[valid_idx]
+    return signal
+
+
+def get_between_area(i: int, arr, w: int):
+    # Upper area
+    row_idx = np.logical_and(i-w <= arr.row, arr.row <= i-1)
+    col_idx = np.logical_and(i-w <= arr.col, arr.col <= i-1)
+    valid_idx = row_idx * col_idx
+    upper_area = arr.data[valid_idx]
+    # Down area
+    row_idx = np.logical_and(i+1 <= arr.row, arr.row <= i+w)
+    col_idx = np.logical_and(i+1 <= arr.col, arr.col <= i+w)
+    valid_idx = row_idx * col_idx
+    down_area = arr.data[valid_idx]
+    return np.concatenate([upper_area,down_area])
+
+
+def TopDom(arr: sparse._arrays.coo_array, window_size: int, multiprocess: bool = True,
+           resolution: int = 5000, wilcoxon_test: bool = True):
     """
     TopDom: an efficient and deterministic method for
     identifying topological domains in genomes.
@@ -21,6 +47,7 @@ def TopDom(arr: sparse._arrays.coo_array, window_size: int, multiprocess: bool =
     :return:
     """
     logger = logging.getLogger(__name__)
+    logger.info("Perform TopDom TAD caller")
     logger.info("Step 1. Calculate bin signal.")
     # Step 1. Calculate bin signal
     if multiprocess:
@@ -59,6 +86,21 @@ def TopDom(arr: sparse._arrays.coo_array, window_size: int, multiprocess: bool =
         next = bin_signal[turning_points[i+1]]
         if prev > cur and next > cur:
             local_minimum.append(turning_points[i])
+
+    if wilcoxon_test:
+        logger.info("Step 3. Wilcoxon ranksum test.")
+        wilcoxon_significant = []
+        w = window_size // resolution
+        for point in tqdm(local_minimum):
+            between_area = np.pad(get_between_area(point, arr, w), (w * w), constant_values=0)
+            within_area = np.pad(get_within_area(point, arr, w), (w * w), constant_values=0)
+            pvalue = \
+            mannwhitneyu(within_area, between_area, use_continuity=True, alternative='less', nan_policy="omit")[1]
+            if pvalue < 0.05:
+                wilcoxon_significant.append([point, pvalue])
+        wilcoxon_significant_points = [point[0] for point in wilcoxon_significant]
+        wilcoxon_significant = np.array(wilcoxon_significant)
+        local_minimum = wilcoxon_significant_points
 
     local_minimum = [val * resolution for val in local_minimum]
     return local_minimum
