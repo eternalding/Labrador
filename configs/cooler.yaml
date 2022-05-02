@@ -9,7 +9,10 @@ Format:
     delimiter: "\t"
     resolution: 5000
   Cooler:
-    
+    main_value_field: "Default"
+    optional_field: ["Count", "KR", "VC", "VC_SQRT"]
+    resolution: 5000
+    chromosomes: "chr22"
 Metadata:
   data: "/mnt/s/workspace/hic_datasets/GM12878_example.mcool"
   version:

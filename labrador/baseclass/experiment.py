@@ -5,6 +5,7 @@ from pathlib import Path
 from labrador.baseclass.specs import DelimiterSpec, CoolerSpec
 from labrador.formatter.delimited import read_delimited_file
 from labrador.visualizer.plot import plot_interactive_matrix, gen_heatmap, plot_multiple_arrays
+from labrador.baseclass.cooler_loader import read_cooler_file
 import logging
 import gc
 
@@ -43,7 +44,10 @@ class Experiment:
             self.sparse_mats = read_delimited_file(ext, filename, self.spec)
         elif ext == ".mcool" or ext == ".cool":
             # TODO: Support cooler files
-            pass
+            resolution = self.spec.metadata['resolution']
+            fields = list(self.spec.metadata['main_value_field']) + self.spec.metadata['optional_field']
+            chroms = self.spec.metadata['chromosomes']
+            self.sparse_mats = read_cooler_file(filename, resolution, fields, chroms)
         else:
             raise NotImplementedError(f"Labrador doesn't support file format {ext}! "
                                        "Supported formats: {SUPPORTED_FORMATS}")

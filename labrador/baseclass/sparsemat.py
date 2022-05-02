@@ -6,6 +6,7 @@ from labrador.normalizer.statistics import minmax_normalization
 
 SUPPORTED_NORM_METHODS = ["ICE", "MinMax", "SCN"]
 
+
 class SparseMat:
     def __init__(self, row_idxs: np.ndarray, col_idxs: np.ndarray, vals: dict,
                  chrom: str, resolution: int):
